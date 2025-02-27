@@ -4,6 +4,9 @@ from werkzeug.utils import secure_filename
 from pdf_to_excel import extract_data_from_page
 import fitz
 import pandas as pd
+import time
+from datetime import datetime, timedelta
+import threading
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -11,6 +14,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 # Конфигурация загрузки файлов
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf', 'PDF'}
+MAX_FILE_AGE = 86400  # Максимальный возраст файла в секундах (24 часа)
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -23,17 +27,52 @@ def allowed_file(filename):
 
 def clean_up_files(pdf_path=None, excel_path=None):
     """Удаляет временные файлы"""
-    try:
-        if pdf_path and os.path.exists(pdf_path):
-            os.remove(pdf_path)
-    except Exception as e:
-        print(f"Ошибка при удалении PDF файла: {str(e)}")
+    files_to_remove = []
+    if pdf_path:
+        files_to_remove.append(pdf_path)
+    if excel_path:
+        files_to_remove.append(excel_path)
     
-    try:
-        if excel_path and os.path.exists(excel_path):
-            os.remove(excel_path)
-    except Exception as e:
-        print(f"Ошибка при удалении Excel файла: {str(e)}")
+    for file_path in files_to_remove:
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception:
+            pass
+
+def wait_until_midnight():
+    """Ожидает до следующего запуска в 00:00 UTC"""
+    now = datetime.utcnow()
+    next_run = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if now >= next_run:
+        next_run += timedelta(days=1)
+    time_to_wait = (next_run - now).total_seconds()
+    time.sleep(time_to_wait)
+
+def clean_old_files():
+    """Периодически удаляет старые файлы из папки uploads"""
+    while True:
+        try:
+            # Ждем до 00:00 UTC
+            wait_until_midnight()
+            
+            # Очищаем старые файлы
+            current_time = time.time()
+            for filename in os.listdir(UPLOAD_FOLDER):
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                if os.path.isfile(file_path):
+                    file_age = current_time - os.path.getmtime(file_path)
+                    if file_age > MAX_FILE_AGE:
+                        try:
+                            os.remove(file_path)
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+# Запускаем поток для периодической очистки файлов
+cleanup_thread = threading.Thread(target=clean_old_files, daemon=True)
+cleanup_thread.start()
 
 def format_numbers(df):
     """Форматирует числовые колонки в DataFrame"""

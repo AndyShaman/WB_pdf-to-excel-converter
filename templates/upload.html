@@ -3,75 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Конвертер PDF в Excel</title>
+    <title>Конвертер уведомлений WB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #6f42c1;
+            --secondary-color: #563d7c;
+            --gradient-start: #8c68d1;
+            --gradient-end: #563d7c;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            color: #fff;
         }
+
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            flex: 1;
+            max-width: 800px;
+            margin: 2rem auto;
             padding: 20px;
         }
+
         .upload-form {
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
+
+        .service-description {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #fff;
+            line-height: 1.6;
+        }
+
         .upload-zone {
-            border: 2px dashed #0d6efd;
-            border-radius: 5px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
             padding: 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
+            background: rgba(255, 255, 255, 0.05);
         }
+
         .upload-zone:hover {
-            border-color: #0a58ca;
-            background-color: #f8f9fa;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
         }
+
         .upload-zone.dragover {
-            border-color: #0a58ca;
-            background-color: #e9ecef;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.15);
         }
+
         .upload-icon {
             width: 64px;
             height: 64px;
             margin-bottom: 1rem;
+            filter: brightness(0) invert(1);
         }
+
         #file-input {
             position: absolute;
             left: -9999px;
         }
-        .alert {
-            margin-bottom: 1rem;
+
+        .selected-file {
+            margin-top: 10px;
+            color: #fff;
+            font-weight: 500;
         }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
         .loading {
             display: none;
             margin-top: 1rem;
+            color: #fff;
         }
-        .selected-file {
-            margin-top: 10px;
-            color: #0d6efd;
-            font-weight: 500;
-        }
+
         .success-message {
             display: none;
             margin-top: 1rem;
-            color: #198754;
+            color: #4caf50;
+        }
+
+        .alert {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.1);
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="upload-form">
-            <h2 class="text-center mb-4">Конвертер PDF в Excel</h2>
+            <h1 class="text-center mb-4">Конвертер уведомлений Wildberries</h1>
+            
+            <div class="service-description">
+                <p class="mb-4">
+                    Этот сервис позволяет конвертировать PDF-файл уведомления о выкупе Wildberries 
+                    в Excel-файл для удобной выгрузки данных в 1С. Просто перетащите файл уведомления 
+                    или нажмите для его выбора.
+                </p>
+            </div>
             
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
@@ -91,11 +163,11 @@
                     <input type="file" id="file-input" name="file" accept=".pdf,.PDF">
                     <div id="selected-file" class="selected-file"></div>
                 </div>
-                <div class="d-grid gap-2 mt-3">
+                <div class="d-grid gap-2 mt-4">
                     <button id="submit-btn" type="submit" class="btn btn-primary" disabled>Конвертировать</button>
                 </div>
                 <div id="loading" class="loading text-center">
-                    <div class="spinner-border text-primary" role="status">
+                    <div class="spinner-border text-light" role="status">
                         <span class="visually-hidden">Загрузка...</span>
                     </div>
                     <p class="mt-2">Обработка файла...</p>
@@ -107,6 +179,15 @@
         </div>
     </div>
 
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-1">&copy; 2024 ООО "КИП Строй Лайн". Все права защищены.</p>
+            <p class="mb-0">
+                Связаться с нами: <a href="mailto:info@kipsl.by">info@kipsl.by</a>
+            </p>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const form = document.getElementById('upload-form');
@@ -117,7 +198,6 @@
         const selectedFile = document.getElementById('selected-file');
         const successMessage = document.getElementById('success-message');
 
-        // Предотвращаем стандартное поведение перетаскивания
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             uploadZone.addEventListener(eventName, preventDefaults, false);
             document.body.addEventListener(eventName, preventDefaults, false);
@@ -128,7 +208,6 @@
             e.stopPropagation();
         }
 
-        // Добавляем визуальный эффект при перетаскивании
         ['dragenter', 'dragover'].forEach(eventName => {
             uploadZone.addEventListener(eventName, highlight, false);
         });
@@ -145,7 +224,6 @@
             uploadZone.classList.remove('dragover');
         }
 
-        // Обработка перетаскивания файла
         uploadZone.addEventListener('drop', handleDrop, false);
 
         function handleDrop(e) {
@@ -154,7 +232,6 @@
             handleFiles(files);
         }
 
-        // Обработка выбора файла через диалог
         uploadZone.addEventListener('click', () => {
             fileInput.click();
         });
@@ -178,7 +255,6 @@
             }
         }
 
-        // Обработка отправки формы
         form.addEventListener('submit', function(e) {
             if (!fileInput.files || fileInput.files.length === 0) {
                 e.preventDefault();
@@ -188,7 +264,6 @@
             submitBtn.disabled = true;
             loading.style.display = 'block';
             
-            // Добавляем обработчик для автоматического сброса формы после загрузки файла
             const formData = new FormData(form);
             e.preventDefault();
 
@@ -201,7 +276,6 @@
                 }
                 throw new Error('Ошибка при обработке файла');
             }).then(blob => {
-                // Скачиваем файл
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -211,11 +285,9 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                // Показываем сообщение об успехе
                 successMessage.style.display = 'block';
                 loading.style.display = 'none';
                 
-                // Сбрасываем форму через небольшую задержку
                 setTimeout(resetForm, 2000);
             }).catch(error => {
                 loading.style.display = 'none';
@@ -233,7 +305,6 @@
             successMessage.style.display = 'none';
         }
 
-        // Автоматически скрываем алерты через 5 секунд
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(alert => {
             setTimeout(() => {
